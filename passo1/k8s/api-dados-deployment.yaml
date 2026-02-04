@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-dados
+  labels:
+    app: api-dados
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-dados
+  template:
+    metadata:
+      labels:
+        app: api-dados
+    spec:
+      containers:
+      - name: api-dados
+        image: kellreal/api-dados:latest
+        ports:
+        - containerPort: 5000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 250m
+            memory: 128Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 10
