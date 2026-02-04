@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-consumidor-edge
+  namespace: edge
+  labels:
+    app: api-consumidor-edge
+    environment: edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-consumidor-edge
+  template:
+    metadata:
+      labels:
+        app: api-consumidor-edge
+        environment: edge
+    spec:
+      containers:
+      - name: api-consumidor-edge
+        image: kellreal/api-consumidor:latest
+        ports:
+        - containerPort: 5001
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+          limits:
+            cpu: 150m
+            memory: 64Mi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 10
+          periodSeconds: 15
+          failureThreshold: 5
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5001
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          failureThreshold: 8
+          timeoutSeconds: 5
+        volumeMounts:
+        - name: buffer-local
+          mountPath: /app/buffer
+      volumes:
+      - name: buffer-local
+        emptyDir:
+          sizeLimit: 50Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-consumidor-edge-service
+  namespace: edge
+spec:
+  selector:
+    app: api-consumidor-edge
+  ports:
+  - port: 5001
+    targetPort: 5001
+  type: NodePort
